@@ -1,0 +1,51 @@
+version: "2"
+services:
+  api-pedidos:
+    container_name: api-pedido-cliente-produto
+    build:
+      dockerfile: Dockerfile
+      args:
+        - APP_VERSION=api-pedido-cliente-produto-0.0.1-SNAPSHOT
+    environment:
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=123456
+      - DATABASE_HOST=db-pedido
+    depends_on:
+      db-pedidos:
+        condition: service_healthy
+    image: api-client:0.0.1
+    ports:
+      - 8080:8080
+    volumes:
+      - vol-maven:/root/.m2
+    networks:
+      - shared-network
+    stdin_open: true
+    tty: true
+  db-pedidos:
+    container_name: db-pedido
+    image: mysql:5.7
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 10s
+      retries: 10
+    ports:
+      - "3307:3306"
+    expose:
+      - "3306"
+    volumes:
+      - vol-db-pedido:/var/lib/mysql
+    networks:
+      - shared-network
+volumes:
+  vol-db-pedidos:
+    name: db-pedido
+  vol-maven:
+    name: vol-maven
+networks:
+  shared-network:
+    driver: bridge
+    name: shared-network
